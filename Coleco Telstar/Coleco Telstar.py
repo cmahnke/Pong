@@ -1,4 +1,5 @@
 import sys
+import os
 import pygame.freetype
 import pygame
 import random
@@ -307,197 +308,201 @@ def handball():
     draw_walls()
     pygame.draw.rect(screen, (255, 255, 255), right_paddle)
 
+def main() -> int:
+    pygame.init()
+    if os.name == 'nt':
+        ctypes.windll.user32.SetProcessDPIAware()
+    height = 960
+    width = 1280
+    screen = pygame.display.set_mode((width, height))
+    score_screen = pygame.Surface((width, 255))
+    handball_screen = pygame.Surface((width, 255))
+    pygame.display.set_caption('Coleco Telstar')
+    scoreFont = pygame.freetype.Font('text/colecoscore.ttf', 105)
+    wall_hit_sound = pygame.mixer.Sound('sounds/wallhit.wav')
+    score_sound = pygame.mixer.Sound('sounds/score.wav')
+    paddle_hit_sound = pygame.mixer.Sound('sounds/paddlehit.wav')
 
-pygame.init()
-ctypes.windll.user32.SetProcessDPIAware()
-height = 960
-width = 1280
-screen = pygame.display.set_mode((width, height))
-score_screen = pygame.Surface((width, 255))
-handball_screen = pygame.Surface((width, 255))
-pygame.display.set_caption('Coleco Telstar')
-scoreFont = pygame.freetype.Font('text/colecoscore.ttf', 105)
-wall_hit_sound = pygame.mixer.Sound('sounds/wallhit.wav')
-score_sound = pygame.mixer.Sound('sounds/score.wav')
-paddle_hit_sound = pygame.mixer.Sound('sounds/paddlehit.wav')
+    FPS = 60
+    fpsClock = pygame.time.Clock()
 
-FPS = 60
-fpsClock = pygame.time.Clock()
+    paddle_height = 150
+    paddle_width = 30
+    ball_height = 27
+    ball_width = 33
+    leftx = 32
+    lefty = height // 2
+    rightx = width - 32 - paddle_width
+    righty = height // 2
+    ballx = -50
+    bally = -50
+    paddle_speed = 20.0
+    ball_speed = 18.0
+    vx = ball_speed
 
-paddle_height = 150
-paddle_width = 30
-ball_height = 27
-ball_width = 33
-leftx = 32
-lefty = height // 2
-rightx = width - 32 - paddle_width
-righty = height // 2
-ballx = -50
-bally = -50
-paddle_speed = 20.0
-ball_speed = 18.0
-vx = ball_speed
-
-topWall = pygame.Rect(0, 0, width, 12)
-bottomWall = pygame.Rect(0, height-12, width, 12)
-net = pygame.Rect(633, 0, paddle_width, height)
-ball = pygame.Rect(ballx, bally, ball_width, ball_height)
-left_paddle = pygame.Rect(leftx, lefty, paddle_width, paddle_height)
-left_paddle2 = pygame.Rect(930, lefty, paddle_width, paddle_height)
-right_paddle = pygame.Rect(rightx, righty, paddle_width, paddle_height)
-right_paddle2 = pygame.Rect(320, righty, paddle_width, paddle_height)
+    topWall = pygame.Rect(0, 0, width, 12)
+    bottomWall = pygame.Rect(0, height-12, width, 12)
+    net = pygame.Rect(633, 0, paddle_width, height)
+    ball = pygame.Rect(ballx, bally, ball_width, ball_height)
+    left_paddle = pygame.Rect(leftx, lefty, paddle_width, paddle_height)
+    left_paddle2 = pygame.Rect(930, lefty, paddle_width, paddle_height)
+    right_paddle = pygame.Rect(rightx, righty, paddle_width, paddle_height)
+    right_paddle2 = pygame.Rect(320, righty, paddle_width, paddle_height)
 
 
-left_points = 0
-right_points = 0
-ballTimer = 0
-dt = 0
-game = 1
-diff = 1
+    left_points = 0
+    right_points = 0
+    ballTimer = 0
+    dt = 0
+    game = 1
+    diff = 1
 
-controls = 'Mouse'
-leftMovingUp = False
-leftMovingDown = False
-rightMovingUp = False
-rightMovingDown = False
-ballMoving = False
-scored = False
-gameStarted = True
-ballSpawning = False
+    controls = 'Mouse'
+    leftMovingUp = False
+    leftMovingDown = False
+    rightMovingUp = False
+    rightMovingDown = False
+    ballMoving = False
+    scored = False
+    gameStarted = True
+    ballSpawning = False
 
-make_score()
-dirchoice = random.choice([0, 1])
-if dirchoice == 0:
-    leftMoving = True
-else:
-    leftMoving = False
+    make_score()
+    dirchoice = random.choice([0, 1])
+    if dirchoice == 0:
+        leftMoving = True
+    else:
+        leftMoving = False
 
-pygame.mouse.set_cursor((8, 8), (0, 0), (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0))
-pygame.mouse.set_pos([0, 0])
-scoreTime = time.time()
-lastTime = time.time()
-while True:
-    dt = time.time() - lastTime
-    dt *= FPS
+    pygame.mouse.set_cursor((8, 8), (0, 0), (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0))
+    pygame.mouse.set_pos([0, 0])
+    scoreTime = time.time()
     lastTime = time.time()
-    screen.fill((0, 0, 0))
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            pygame.quit()
-            sys.exit()
-        elif event.type == KEYUP and event.key == K_LSHIFT:
+    while True:
+        dt = time.time() - lastTime
+        dt *= FPS
+        lastTime = time.time()
+        screen.fill((0, 0, 0))
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == KEYUP and event.key == K_LSHIFT:
+                if controls == 'Mouse':
+                    controls = 'Key'
+                else:
+                    controls = 'Mouse'
+            elif event.type == KEYUP and event.key == K_SPACE:
+                new_game(1)
+                scoreTime = time.time()
+                make_score()
+            elif event.type == KEYUP and event.key == K_ESCAPE:
+                pygame.quit()
+                sys.exit()
+            elif event.type == KEYUP and event.key == K_KP1:
+                game = 1
+            elif event.type == KEYUP and event.key == K_KP2:
+                game = 2
+            elif event.type == KEYUP and event.key == K_KP3:
+                game = 3
+            elif event.type == KEYUP and event.key == K_1:
+                diff = 1
+                if vx > 0:
+                    vx = 18.0
+                else:
+                    vx = -18.0
+                paddle_height = 150
+                left_paddle = pygame.Rect(leftx, pygame.mouse.get_pos()[1], paddle_width, paddle_height)
+                right_paddle = pygame.Rect(rightx, pygame.mouse.get_pos()[1], paddle_width, paddle_height)
+                left_paddle2 = pygame.Rect(930, pygame.mouse.get_pos()[1], paddle_width, paddle_height)
+                right_paddle2 = pygame.Rect(320, pygame.mouse.get_pos()[1], paddle_width, paddle_height)
+            elif event.type == KEYUP and event.key == K_2:
+                diff = 2
+                if vx > 0:
+                    vx = 18.0
+                else:
+                    vx = -18.0
+                paddle_height = 75
+                left_paddle = pygame.Rect(leftx, pygame.mouse.get_pos()[1], paddle_width, paddle_height)
+                right_paddle = pygame.Rect(rightx, pygame.mouse.get_pos()[1], paddle_width, paddle_height)
+                left_paddle2 = pygame.Rect(930, pygame.mouse.get_pos()[1], paddle_width, paddle_height)
+                right_paddle2 = pygame.Rect(320, pygame.mouse.get_pos()[1], paddle_width, paddle_height)
+            elif event.type == KEYUP and event.key == K_3:
+                diff = 3
+                if vx > 0:
+                    vx = 36.0
+                else:
+                    vx = -36.0
+                paddle_height = 150
+                left_paddle = pygame.Rect(leftx, pygame.mouse.get_pos()[1], paddle_width, paddle_height)
+                right_paddle = pygame.Rect(rightx, pygame.mouse.get_pos()[1], paddle_width, paddle_height)
+                left_paddle2 = pygame.Rect(930, pygame.mouse.get_pos()[1], paddle_width, paddle_height)
+                right_paddle2 = pygame.Rect(320, pygame.mouse.get_pos()[1], paddle_width, paddle_height)
             if controls == 'Mouse':
-                controls = 'Key'
+                if event.type == MOUSEMOTION:
+                    position = pygame.mouse.get_pos()
+                    pygame.mouse.set_pos(width / 2, position[1])
+                    if leftMoving:
+                        left_paddle.y = position[1]
+                    else:
+                        right_paddle.y = position[1]
+            elif controls == 'Key':
+                if event.type == KEYUP:
+                    if event.key == K_w:
+                        leftMovingUp = False
+                    elif event.key == K_s:
+                        leftMovingDown = False
+                    elif event.key == K_UP:
+                        rightMovingUp = False
+                    elif event.key == K_DOWN:
+                        rightMovingDown = False
+                elif event.type == KEYDOWN:
+                    if event.key == K_w:
+                        leftMovingUp = True
+                    elif event.key == K_s:
+                        leftMovingDown = True
+                    elif event.key == K_UP:
+                        rightMovingUp = True
+                    elif event.key == K_DOWN:
+                        rightMovingDown = True
+        if not ballMoving and ballTimer >= 1:
+            ballMoving = True
+            ball.centery = random.randint(66, height-120)
+            if dirchoice == 0:
+                ball.centerx = width - 35
+                quadrant = random.choice([2, 3])
+                if quadrant == 2:
+                    direction = random.randint(125, 180)
+                else:
+                    direction = random.randint(186, 225)
             else:
-                controls = 'Mouse'
-        elif event.type == KEYUP and event.key == K_SPACE:
-            new_game(1)
-            scoreTime = time.time()
-            make_score()
-        elif event.type == KEYUP and event.key == K_ESCAPE:
-            pygame.quit()
-            sys.exit()
-        elif event.type == KEYUP and event.key == K_KP1:
-            game = 1
-        elif event.type == KEYUP and event.key == K_KP2:
-            game = 2
-        elif event.type == KEYUP and event.key == K_KP3:
-            game = 3
-        elif event.type == KEYUP and event.key == K_1:
-            diff = 1
-            if vx > 0:
-                vx = 18.0
-            else:
-                vx = -18.0
-            paddle_height = 150
-            left_paddle = pygame.Rect(leftx, pygame.mouse.get_pos()[1], paddle_width, paddle_height)
-            right_paddle = pygame.Rect(rightx, pygame.mouse.get_pos()[1], paddle_width, paddle_height)
-            left_paddle2 = pygame.Rect(930, pygame.mouse.get_pos()[1], paddle_width, paddle_height)
-            right_paddle2 = pygame.Rect(320, pygame.mouse.get_pos()[1], paddle_width, paddle_height)
-        elif event.type == KEYUP and event.key == K_2:
-            diff = 2
-            if vx > 0:
-                vx = 18.0
-            else:
-                vx = -18.0
-            paddle_height = 75
-            left_paddle = pygame.Rect(leftx, pygame.mouse.get_pos()[1], paddle_width, paddle_height)
-            right_paddle = pygame.Rect(rightx, pygame.mouse.get_pos()[1], paddle_width, paddle_height)
-            left_paddle2 = pygame.Rect(930, pygame.mouse.get_pos()[1], paddle_width, paddle_height)
-            right_paddle2 = pygame.Rect(320, pygame.mouse.get_pos()[1], paddle_width, paddle_height)
-        elif event.type == KEYUP and event.key == K_3:
-            diff = 3
-            if vx > 0:
+                ball.centerx = 35
+                quadrant = random.choice([1, 4])
+                if quadrant == 1:
+                    direction = random.randint(0, 45)
+                else:
+                    direction = random.randint(315, 354)
+            if diff == 3:
                 vx = 36.0
             else:
-                vx = -36.0
-            paddle_height = 150
-            left_paddle = pygame.Rect(leftx, pygame.mouse.get_pos()[1], paddle_width, paddle_height)
-            right_paddle = pygame.Rect(rightx, pygame.mouse.get_pos()[1], paddle_width, paddle_height)
-            left_paddle2 = pygame.Rect(930, pygame.mouse.get_pos()[1], paddle_width, paddle_height)
-            right_paddle2 = pygame.Rect(320, pygame.mouse.get_pos()[1], paddle_width, paddle_height)
-        if controls == 'Mouse':
-            if event.type == MOUSEMOTION:
-                position = pygame.mouse.get_pos()
-                pygame.mouse.set_pos(width / 2, position[1])
-                if leftMoving:
-                    left_paddle.y = position[1]
-                else:
-                    right_paddle.y = position[1]
-        elif controls == 'Key':
-            if event.type == KEYUP:
-                if event.key == K_w:
-                    leftMovingUp = False
-                elif event.key == K_s:
-                    leftMovingDown = False
-                elif event.key == K_UP:
-                    rightMovingUp = False
-                elif event.key == K_DOWN:
-                    rightMovingDown = False
-            elif event.type == KEYDOWN:
-                if event.key == K_w:
-                    leftMovingUp = True
-                elif event.key == K_s:
-                    leftMovingDown = True
-                elif event.key == K_UP:
-                    rightMovingUp = True
-                elif event.key == K_DOWN:
-                    rightMovingDown = True
-    if not ballMoving and ballTimer >= 1:
-        ballMoving = True
-        ball.centery = random.randint(66, height-120)
-        if dirchoice == 0:
-            ball.centerx = width - 35
-            quadrant = random.choice([2, 3])
-            if quadrant == 2:
-                direction = random.randint(125, 180)
-            else:
-                direction = random.randint(186, 225)
+                vx = 18.0
+            if dirchoice == 0:
+                vx *= -1
+            vy = math.tan(math.radians(direction)) * vx
+            ballTimer = 0
+        if ballMoving:
+            ball = ball_movement(ball)
+        if game == 1:
+            tennis()
+        elif game == 2:
+            hockey()
         else:
-            ball.centerx = 35
-            quadrant = random.choice([1, 4])
-            if quadrant == 1:
-                direction = random.randint(0, 45)
-            else:
-                direction = random.randint(315, 354)
-        if diff == 3:
-            vx = 36.0
-        else:
-            vx = 18.0
-        if dirchoice == 0:
-            vx *= -1
-        vy = math.tan(math.radians(direction)) * vx
-        ballTimer = 0
-    if ballMoving:
-        ball = ball_movement(ball)
-    if game == 1:
-        tennis()
-    elif game == 2:
-        hockey()
-    else:
-        handball()
-    if not ballMoving:
-        ballTimer = time.time() - scoreTime
-    pygame.draw.rect(screen, (255, 255, 255), ball)
-    pygame.display.update()
-    fpsClock.tick(FPS)
+            handball()
+        if not ballMoving:
+            ballTimer = time.time() - scoreTime
+        pygame.draw.rect(screen, (255, 255, 255), ball)
+        pygame.display.update()
+        fpsClock.tick(FPS)
+
+if __name__ == '__main__':
+    sys.exit(main())
